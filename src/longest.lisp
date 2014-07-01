@@ -24,9 +24,21 @@
 			do (let ((lst (split #\, line)))
 					 (setf (gethash (car lst) *dict*) lst)))))
 
+;(defun from-file (file)
+;	(let ((threads))
+;		(loop for f in (directory (concatenate 'string file "/*.csv"))
+;					for i from 1
+;					do (push 
+;							 (sb-thread:make-thread #'(lambda () (set-dict f)))
+;							 threads)
+;					when (eql (mod i 5) 0) do 
+;					(progn (loop for thread in threads
+;											 do (sb-thread:join-thread thread))
+;								 (setq threads nil)))))
+
 (defun from-file (file)
-	(mapc #'set-dict
-				(directory (concatenate 'string file "/*.csv"))))
+	(loop for file in (directory (concatenate 'string file "/*.csv"))
+				do (set-dict file)))
 
 (from-file "utf-8")
 

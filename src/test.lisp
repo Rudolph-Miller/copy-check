@@ -5,18 +5,17 @@
 (defvar *dict* (make-hash-table :test #'equal))
 (defvar *dict-pos* "utf-8/")
 
-;;;destructive
-;;;just count word
+;;;destructive ;;;just count word
 ;; or you can set it just list and use find instead of gethash
 (defun count-word (word hash)
   (declare (hash-table hash)
 		   (optimize (speed 3) (safety 0) (debug 0) (space 0)))
 	(setf (gethash word hash) (length word)))
 
-(defun search-engine (q &key (livedoor nil) (yahoo nil))
+(defun search-engine (q &key (livedoor nil) (bing nil))
 	(let ((s (make-string-output-stream)))
 	(sb-ext:run-program "/usr/bin/python" (cond
-																					(yahoo  (list "test.py" q "yahoo"))
+																					(bing (list "test.py" q "bing"))
 																					(livedoor (list "test.py" q "livedoor"))
 																					(t (list "test.py" q)))
 											:output s)
@@ -35,8 +34,8 @@
 			do (setf str (subseq str (1+ end))))
 		(nreverse result)))
 
-(defun get-result (q &key (livedoor nil) (yahoo nil))
-	(let* ((sea (search-engine q :livedoor livedoor :yahoo yahoo))
+(defun get-result (q &key (livedoor nil) (bing nil))
+	(let* ((sea (search-engine q :livedoor livedoor :bing bing))
 				 (dq (pick-double-quotation sea))
 				 (lst (coerce sea 'list))
 				 (result nil) (flag nil) (acc nil))
@@ -236,36 +235,35 @@
 										 (iter (cdr lst) (append (iter (car lst) nil) acc))))))
 		(nreverse (iter lst nil))))
 
-
-(defun in-thread (str &key (url nil) (file nil) (yahoo nil) (livedoor nil))
-	(let ((threads)
-				(result (make-hash-table :test #'equal))
-				(key-list 
-					(make-key-list
-						(cond
-							(url (wget str))
-							(file (read-file str))
-							(t str)))))
-		(maphash 
-			#'(lambda (key val)
-					(let ((str (apply #'concatenate 'string key)))
-						(push 
-							(sb-thread:make-thread 
-								#'(lambda ()
-										(setf
-											(gethash key result)
-											(list 
-												(get-result str :yahoo yahoo :livedoor livedoor)
-												(length str)))))
-							threads)))
-			(list-n-to-m-gram
-				1 4
-				key-list))
-		(loop
-			for thread in threads
-			do (sb-thread:join-thread thread))
-		(list result key-list)))
-
+;(defun in-thread (str &key (url nil) (file nil) (bing nil) (livedoor nil))
+;	(let ((threads)
+;				(result (make-hash-table :test #'equal))
+;				(key-list 
+;					(make-key-list
+;						(cond
+;							(url (wget str))
+;							(file (read-file str))
+;							(t str)))))
+;		(maphash 
+;			#'(lambda (key val)
+;					(let ((str (apply #'concatenate 'string key)))
+;						(push 
+;							(sb-thread:make-thread 
+;								#'(lambda ()
+;										(setf
+;											(gethash key result)
+;											(list 
+;												(get-result str :bing bing :livedoor livedoor)
+;												(length str)))))
+;							threads)))
+;			(list-n-to-m-gram
+;				1 3
+;				key-list))
+;		(loop
+;			for thread in threads
+;			do (sb-thread:join-thread thread))
+;		(list result key-list)))
+;
 (defun print-result (hash-list)
 	(let ((dict (make-hash-table :test #'equal))
 				(hash (car hash-list))
@@ -282,6 +280,7 @@
 									keys))
 			hash)
 		(print-hash hash)
+		(print (hash-table-count hash))
 		(print
 			(mapcar
 			#'(lambda (key)
@@ -291,3 +290,23 @@
 						(list key nil))))
 			key-list))))
 
+(defun node-main (path)
+	(let ((str))
+	(with-open-file (f path :direction :input)
+		(loop
+			for chr = (read-char f nil)
+			while chr
+			do (if (not (eql chr #\NewLine))
+					 (push chr str))))
+	(setq str (coerce (nreverse str) 'string))
+	(maphash
+		#'(lambda (key val)
+				(format t "~a~%" key))
+		(list-n-to-m-gram 1 3 (make-key-list str)))))
+
+(defun exe ()
+	(node-main (cadr sb-ext:*posix-argv*)))
+
+(sb-ext:save-lisp-and-die "main.exe"
+													:toplevel #'exe
+													:executable t)

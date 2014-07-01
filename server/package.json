@@ -1,0 +1,11 @@
+{
+	"name": "copy_check_server",
+	"version": "0.0.0",
+	"description": "",
+	"devDependencies": {
+		"coffee": "*",
+		"request": "*",
+		"hamljs": "*",
+		"async": "*"
+	}
+}

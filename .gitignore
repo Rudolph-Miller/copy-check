@@ -1,0 +1,7 @@
+*.swp
+*.DS_Store
+.bing_credentials.json
+node_modules/
+tmp/
+log
+main.exe

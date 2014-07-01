@@ -1,0 +1,21 @@
+%h1 result
+#check_result!= result
+%br
+- if (80 < rate)
+  %h2{style: 'color: orange'} #{rate}%
+  %p too higher
+- if (50 < rate && rate <= 80)
+  %h2{style: 'color: orange'} #{rate}%
+  %p higher
+- if (25 < rate && rate <= 50)
+  %h3{style: 'color: yellow'} #{rate}%
+  %p normal
+- if (rate <= 25)
+  %h2{style: 'color: aqua'} #{rate}%
+  %p gj
+%input.btn.btn-info.back_to_index{type: 'button', value: 'back'}
+%input.btn.btn-danger#booing{type: 'button', value: 'ケチをつける'}
+
+%p#raw_text{style: 'display: none'}= raw
+%script{src: 'http://ajax.googleapis.com/ajax/libs/jquery/1.7.0/jquery.min.js'}
+%script{src: 'controller'}
