@@ -29,6 +29,8 @@ check = (res, query) ->
         result: result.text
         rate: Math.round(result.rate*10) / 10
         raw: result.raw
+        sum_len: result.sum_len
+        true_len: result.true_len
       fs.readFile 'view/result.haml', 'utf-8', (err, data) ->
         if err
           console.log err
@@ -64,7 +66,13 @@ check = (res, query) ->
           if obj.tf == undefined
             obj.tf = false
           (haml.render data, locals: obj).slice(1)
-        main {text:formatList.join(''), rate: rate, raw: query.text}
+        resultData =
+          text:formatList.join('')
+          rate: rate
+          raw: query.text
+          sum_len: sumLen
+          true_len: trueLen
+        main resultData
 
   copy_check.exe query.text, formatting
 
