@@ -53,6 +53,14 @@ exe = (text, callback) ->
           inThread data
         em.on 'finish_thread', threadFinish
         em.once 'end', (data) ->
+          logData =
+            date: (new Date()).toLocaleString()
+            query: counter
+            length: text.length
+            text: text
+          fs.appendFile 'log/bing.log', JSON.stringify(logData).toString() + '\n', (err) ->
+            if err
+              console.log err
           em.removeListener 'finish_thread', threadFinish
           callbackData = {}
           callbackData.keyList = keyList
