@@ -4,7 +4,6 @@ async = require 'async'
 child = require 'child_process'
 exec = child.exec
 events = require 'events'
-em = new events.EventEmitter
 
 uuid = ->
   S4 = ->
@@ -12,6 +11,7 @@ uuid = ->
   S4()+S4()+"-"+S4()+"-"+S4()+"-"+S4()+"-"+S4()+S4()+S4()
 
 exe = (text, callback) ->
+  em = new events.EventEmitter
   id = uuid()
   uniquePath = "tmp/#{id}"
   fs.writeFileSync uniquePath, text, 'utf-8'
@@ -31,18 +31,29 @@ exe = (text, callback) ->
         counter = 0
         finish_counter = 0
         results = {}
+
+        inThread = (data) ->
+          search data.key, (err, result) ->
+            if err
+              console.log err
+            else
+              em.emit 'finish_thread', {result: result, index: data.index}
+
+        threadFinish = (data) ->
+          ++ finish_counter
+          results[data.index] = data.result
+          if finish_counter == counter
+            em.emit 'end', results
+
         for item in arr
           ++ counter
           data =
             key: item.join()
             index: arr.indexOf item
           inThread data
-        em.on 'finish_thread', (data) ->
-          ++ finish_counter
-          results[data.index] = data.result
-          if finish_counter == counter
-            em.emit 'end', results
-        em.on 'end', (data) ->
+        em.on 'finish_thread', threadFinish
+        em.once 'end', (data) ->
+          em.removeListener 'finish_thread', threadFinish
           callbackData = {}
           callbackData.keyList = keyList
           callbackData.arr = []
@@ -55,8 +66,9 @@ exe = (text, callback) ->
 
 search = (key, callback) ->
   credentials = JSON.parse (fs.readFileSync '.bing_credentials.json', 'utf-8')
+  query = key.replace(/[\s\'\"]/g, '')
   uri = "https://api.datamarket.azure.com/Bing/SearchWeb/Web?"
-          .concat "Query=\'\"#{key}\"\'"
+          .concat "Query=\'\"#{query}\"\'"
           .concat "&$format=JSON"
           .concat "&Market=%27ja-JP%27"
           .concat "&$top=50"
@@ -70,18 +82,15 @@ search = (key, callback) ->
       console.log err
       callback(err)
     else
-      result = JSON.parse(body).d.results.length
+      try
+        result = JSON.parse(body).d.results.length
+      catch err
+        console.log res
+        callback err
       if result == 50
         result = 1000
       callback null, result / key.length
       
-inThread = (data) ->
-  search data.key, (err, result) ->
-    if err
-      console.log err
-    else
-      em.emit 'finish_thread', {result: result, index: data.index}
-
 getIndexOfText = (arr, keyList, callback) ->
   result = []
   async.forEach arr, (item) ->

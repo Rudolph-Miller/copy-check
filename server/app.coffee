@@ -9,5 +9,6 @@ handle =
   '/controller': handler.controller
   '/back_to_index': handler.backToIndex
   '/booing': handler.booing
+  '/loading': handler.loading
 
 server.start port, router.routes, handle

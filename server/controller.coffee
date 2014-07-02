@@ -2,6 +2,7 @@ $("#check").click ->
   postData =
     text: $("#check_text_area").val()
     item: 'check'
+  $("#contents").html("<img src='loading' width='150px' height='150px' style='margin-top: 200px;' class='align-center'/>")
   $.ajax
     url: 'check'
     type: 'post'

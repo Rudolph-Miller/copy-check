@@ -1,6 +1,5 @@
-%h1 result
-#check_result!= result
-%br
+%h1 けっかー
+.text-left#check_result{style: 'width: 800px; height: 400px; margin: 0 auto;'}!= result
 - if (80 < rate)
   %h2{style: 'color: orange'} #{rate}%
   %p too higher

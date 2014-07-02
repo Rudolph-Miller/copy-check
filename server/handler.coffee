@@ -1,4 +1,3 @@
-binger = require 'binger'
 haml = require 'hamljs'
 coffee = require 'coffee-script'
 fs = require 'fs'
@@ -85,7 +84,7 @@ booing = (res, query) ->
 
 backToIndex = (res) ->
   indexData =
-    title: 'index'
+    title: 'こぴぺちぇっかー'
   res.writeHead 'Coview/ntent-Type': 'text/html'
   fs.readFile 'view/index.haml', 'utf-8', (err, data) ->
     if err
@@ -102,8 +101,20 @@ controller = (res) ->
       res.writeHead 200, "Content-Type": "text/javascript"
       res.end coffee.compile data
 
+loading = (res) ->
+  res.writeHead '200', 'Content-Type': 'image/gif'
+  fs.readFile 'view/loading.gif', (err, data) ->
+    if err
+      console.log err
+    else
+      res.end data, 'binary'
+      fs.writeFile 'sample.gif', data, (err) ->
+        if err
+          console.log err
+  
 exports.index = index
 exports.check = check
 exports.booing = booing
 exports.backToIndex = backToIndex
 exports.controller = controller
+exports.loading = loading

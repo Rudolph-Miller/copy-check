@@ -5,6 +5,7 @@
 	"devDependencies": {
 		"coffee": "*",
 		"request": "*",
+		"coffee-script": "*",
 		"hamljs": "*",
 		"async": "*"
 	}
