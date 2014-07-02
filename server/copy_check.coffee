@@ -30,12 +30,14 @@ exe = (text, callback) ->
       getIndexOfText arr, keyList, (indexList) ->
         counter = 0
         finish_counter = 0
+        error_counter = 0
         results = {}
 
         inThread = (data) ->
           search data.key, (err, result) ->
             if err
               console.log err
+              ++ error_counter
             else
               em.emit 'finish_thread', {result: result, index: data.index}
 
@@ -53,24 +55,34 @@ exe = (text, callback) ->
           inThread data
         em.on 'finish_thread', threadFinish
         em.once 'end', (data) ->
-          logData =
-            date: (new Date()).toLocaleString()
-            query: counter
-            length: text.length
-            text: text
-          fs.appendFile 'log/bing.log', JSON.stringify(logData).toString() + '\n', (err) ->
-            if err
-              console.log err
-          em.removeListener 'finish_thread', threadFinish
-          callbackData = {}
-          callbackData.keyList = keyList
-          callbackData.arr = []
-          async.forEach [0..arr.length-1], (index) ->
-            callbackData.arr.push({
-              key: arr[index]
-              index: indexList[index]
-              value: data[index]})
-          callback callbackData
+          if (error_counter / counter) > 1/2
+            console.log 'error happend'
+            callbackData =
+              type: 'error'
+              query: counter
+              length: text.length
+              text: text
+            callback callbackData
+          else
+            logData =
+              type: 'success'
+              date: (new Date()).toLocaleString()
+              query: counter
+              length: text.length
+              text: text
+            fs.appendFile 'log/bing.log', JSON.stringify(logData).toString() + '\n', (err) ->
+              if err
+                console.log err
+            em.removeListener 'finish_thread', threadFinish
+            callbackData = {}
+            callbackData.keyList = keyList
+            callbackData.arr = []
+            async.forEach [0..arr.length-1], (index) ->
+              callbackData.arr.push({
+                key: arr[index]
+                index: indexList[index]
+                value: data[index]})
+            callback callbackData
 
 search = (key, callback) ->
   credentials = JSON.parse (fs.readFileSync '.bing_credentials.json', 'utf-8')
