@@ -76,6 +76,7 @@ exe = (text, callback) ->
             em.removeListener 'finish_thread', threadFinish
             callbackData = {}
             callbackData.keyList = keyList
+            callbackData.query = counter
             callbackData.arr = []
             async.forEach [0..arr.length-1], (index) ->
               callbackData.arr.push({
@@ -121,4 +122,48 @@ getIndexOfText = (arr, keyList, callback) ->
     result[index] = ind
   callback result
 
+formatting = (data, callback) ->
+  if data.type == 'error'
+    main data
+  else
+    query = data.counter
+    result = []
+    async.forEach [0..data.keyList.length-1], (ind) ->
+      result[ind] = {}
+      result[ind].key = data.keyList[ind]
+    async.forEach [0..data.arr.length-1], (index) ->
+      val = data.arr[index].value
+      if val != 0 && val <= 1.5
+        async.forEach data.arr[index].index, (i) ->
+          if i >= 0
+            result[i].tf = true
+
+    trueLen = 0
+    sumLen = 0
+    (result.map (obj) ->if obj.tf then obj.key.length else 0)
+      .reduce (prev, cur) -> trueLen += cur
+    (result.map (obj) -> obj.key.length)
+      .reduce (prev, cur) -> sumLen += cur
+    rate = (trueLen / sumLen) * 100
+
+    fs.readFile 'view/format.haml', 'utf-8', (err, data) ->
+      if err
+        console.log err
+      else
+        formatList = result.map (obj) ->
+          if obj.tf == undefined
+            obj.tf = false
+          (haml.render data, locals: obj).slice(1)
+        resultData =
+          type: 'success'
+          result: result
+          text:formatList.join('')
+          rate: rate
+          raw: query.text
+          sum_len: sumLen
+          true_len: trueLen
+          query: query
+        callback resultData
+
 exports.exe = exe
+exports.formatting = formatting
