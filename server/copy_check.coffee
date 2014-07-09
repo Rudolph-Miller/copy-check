@@ -1,6 +1,7 @@
 fs = require 'fs'
 request = require 'request'
 async = require 'async'
+haml = require 'hamljs'
 child = require 'child_process'
 exec = child.exec
 events = require 'events'
